@@ -2,6 +2,8 @@
 import json
 import io
 import sys
+import os
+import re
 from datetime import datetime
 
 
@@ -29,7 +31,7 @@ def entry2md(entry,entries_dates):
     #it is assumed that there cannot be two entries in the same second.
     #If this is nevertheless the case, one of the two will be lost
 
-    yyyymmdd = date.strftime("%Y-%m-%d")
+    yyyymmdd = date.strftime("%Y_%m_%d")
     filename = yyyymmdd+".md"
     text = "publication-date:: "+str(date)+"\n\n- ### #diary "
     if yyyymmdd in entries_dates:
@@ -43,11 +45,24 @@ def entry2md(entry,entries_dates):
     entries_dates.append(yyyymmdd)
     print(filename,end='')
     #Add date as the title
+
+    
+    #The code will check for a header. If there is none, it will try to make a header from first paragraph, if it is shorter than 30 characters
+    # Otherwise, it will use generic name "DayOne Entry"
     
     if entry['text'][0] == '#':
-        text = text+entry['text'][2:]
+        #text = text+entry['text'][2:]
+        text = text+re.sub(r'\n\n', r'\n\n\t- ', entry['text'][2:])
     else:
-        text = text+'DayOne Entry\n'+entry['text']
+        #text = text+'DayOne Entry\n'+entry['text']
+        match = re.search(r'\n', entry['text'][0:30])
+        if match != None:
+            mfrom, mto = match.span()
+            text = text+entry['text'][0:mfrom]+re.sub(r'\n\n', r'\n\n\t- ', entry['text'][mfrom:])
+        else:
+            text = text+'DayOne Entry\n'+re.sub(r'\n\n', r'\n\n\t- ', entry['text'])
+        
+        
         
     #for some reason, "." and () are escaped
     text = text.replace("\.",".").replace("\(","(").replace("\)",")").replace("\-","-")
@@ -81,20 +96,24 @@ def entry2md(entry,entries_dates):
         if 'location' in entry.keys():
             location = entry['location']
             #print(location)
-            place = "- **Location**:\ncollapsed:: true\n"
+            place = "\t- Location:\n\tcollapsed:: true\n\t"
             for t in ['placeName','localityName','administrativeArea','country']:
                 if t in location.keys():
-                    place += location[t]+"\n"
+                    place += location[t]+"\n\t"
             if 'longitude' in location.keys() and 'latitude' in location.keys():
                 place += ""
                 place += "long: "+str(location['longitude'])
                 place += ", lat: "+str(location['latitude'])
             text += place
-            
-    for iiii in range(2):
-        text.replace("\n\n\n","\n\n")
-        
-    #print(text)        
+
+    #Remove orphaned blocks
+    text = re.sub(r'\n\t- \n', r'', text)
+    
+    for i in range(3):
+        text = re.sub(r'\n\n\n', r'\n\n', text)
+    
+    #print(repr(text))     
+    #print(text)   
     with open(filename, 'w', encoding='utf-8') as fp:
         fp.write(text)
         fp.close()
@@ -115,14 +134,22 @@ filename = ''
 if len(sys.argv) > 1:
     filename = sys.argv[1]
     print('DayOne2md: Python3 script for conversion of DayOne JSON into Markdown entries (aimed for import into Logseq).')
-    print('v0.1 (alpha)')
+    print('v0.2 (alpha)')
     print()
+
 else:
     print('You need to pass a filename in argument. Ex: python do2md.py Journal.json')
     sys.exit()
     
 with open(filename, 'r', encoding='utf-8') as fp:
     journal = json.load(fp)
+
+# Make sure folder four outputs exists, change the workdir to it    
+try:
+    os.mkdir('do2md')
+except:
+    pass
+os.chdir(os.path.join(os.getcwd(),'do2md'))
 
 entries_dates = [0]
 for entry in journal['entries']:  
