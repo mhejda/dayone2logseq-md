@@ -1,4 +1,4 @@
-# dayone2markdown
+# dayone2markdown (logseq-optimized version)
 Converting DayOne journals (from JSON file) into Markdown files.
 Based on original version from @ploum.
 Compatible with Python3.
