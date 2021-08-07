@@ -81,7 +81,7 @@ def entry2md(entry,entries_dates):
         if 'location' in entry.keys():
             location = entry['location']
             #print(location)
-            place = "- Location: \n"
+            place = "- **Location**:\ncollapsed:: true\n"
             for t in ['placeName','localityName','administrativeArea','country']:
                 if t in location.keys():
                     place += location[t]+"\n"
