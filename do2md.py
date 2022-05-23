@@ -49,20 +49,22 @@ def entry2md(entry,entries_dates):
     
     #The code will check for a header. If there is none, it will try to make a header from first paragraph, if it is shorter than 30 characters
     # Otherwise, it will use generic name "DayOne Entry"
-    
-    if entry['text'][0] == '#':
-        #text = text+entry['text'][2:]
-        text = text+re.sub(r'\n\n', r'\n\n\t- ', entry['text'][2:])
-    else:
-        #text = text+'DayOne Entry\n'+entry['text']
-        match = re.search(r'\n', entry['text'][0:30])
-        if match != None:
-            mfrom, mto = match.span()
-            text = text+entry['text'][0:mfrom]+re.sub(r'\n\n', r'\n\n\t- ', entry['text'][mfrom:])
+
+    # if the entry has no text, make sure it is still processed
+    if 'text' in entry:
+        if entry['text'][0] == '#':
+            #text = text+entry['text'][2:]
+            text = text+re.sub(r'\n\n', r'\n\n\t- ', entry['text'][2:])
         else:
-            text = text+'DayOne Entry\n'+re.sub(r'\n\n', r'\n\n\t- ', entry['text'])
-        
-        
+            #text = text+'DayOne Entry\n'+entry['text']
+            match = re.search(r'\n', entry['text'][0:30])
+            if match != None:
+                mfrom, mto = match.span()
+                text = text+entry['text'][0:mfrom]+re.sub(r'\n\n', r'\n\n\t- ', entry['text'][mfrom:])
+            else:
+                text = text+'DayOne Entry\n'+re.sub(r'\n\n', r'\n\n\t- ', entry['text'])
+    else:
+        text = ''
         
     #for some reason, "." and () are escaped
     text = text.replace("\.",".").replace("\(","(").replace("\)",")").replace("\-","-")
