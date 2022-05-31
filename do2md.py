@@ -73,7 +73,7 @@ def entry2md(entry,entries_dates):
     #but only if the tag is not already in the text
     if 'tags' in entry.keys():
         for t in entry['tags']:
-            tag = " %s%s" %(tag_symbol,t)
+            tag = " %s" %(t)
             if tag not in text:
                 tags += tag
 
